@@ -1,0 +1,186 @@
+name: "sp-v1.0"
+volumes:
+  db:
+  app:
+services:
+  # =================== ECC ==================== #
+  core-service-http:
+    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
+    command: ["ecc", "service:http"]
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      kv:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      core-prepare:
+        condition: service_completed_successfully
+    volumes:
+      - "/etc/ssl:/etc/ssl:ro"
+      - "/etc/pki:/etc/pki:ro"
+      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
+      - "app:/ecc/data"
+    env_file:
+      - docker/env/core.env
+      - docker/env/db.env
+      - docker/env/kv.env
+    healthcheck:
+      test: [ "CMD-SHELL","curl --fail http://127.0.0.1:8080/api/health || exit 1" ]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 5s
+      
+  
+  core-service-siamev-async:
+    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
+    command: ["ecc", "service:siamev:fiscal_receipt"]
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      kv:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      core-prepare:
+        condition: service_completed_successfully
+    volumes:
+      - "/etc/ssl:/etc/ssl:ro"
+      - "/etc/pki:/etc/pki:ro"
+      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
+      - "app:/ecc/data"
+    env_file:
+      - docker/env/core.env
+      - docker/env/db.env
+      - docker/env/kv.env
+  
+  core-service-sms-email-async:
+    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
+    command: ["ecc", "service:sms_email:sms_email_updater"]
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      kv:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      core-prepare:
+        condition: service_completed_successfully
+    volumes:
+      - "/etc/ssl:/etc/ssl:ro"
+      - "/etc/pki:/etc/pki:ro"
+      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
+      - "app:/ecc/data"
+    env_file:
+      - docker/env/core.env
+      - docker/env/db.env
+      - docker/env/kv.env
+
+  core-service-ui:
+    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
+    command: ["ecc", "service:ui"]
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      kv:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      core-service-http:
+        condition: service_healthy
+    volumes:
+      - "/etc/ssl:/etc/ssl:ro"
+      - "/etc/pki:/etc/pki:ro"
+      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
+      - "app:/ecc/data"
+    env_file:
+      - docker/env/core.env
+      - docker/env/db.env
+      - docker/env/kv.env
+      - docker/env/ui.env
+ 
+  core-prepare:
+    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
+    command: ["ecc", "db:auto-migrate"]
+    restart: "on-failure"
+    depends_on:
+      kv:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - "/etc/ssl:/etc/ssl:ro"
+      - "/etc/pki:/etc/pki:ro"
+      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
+      - "app:/ecc/data"
+    env_file:
+      - docker/env/core.env
+      - docker/env/db.env
+      - docker/env/kv.env
+
+  # =================== ECC ==================== #
+ 
+
+  # ============ SECONDARY SERVICES ============ #
+
+  proxy:
+    restart: "always"
+    image: "${REGISTRY_DOMAIN}/${PROXY_VERSION}"
+    ports:
+      - "8443:443"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:8888/ping || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      timeout: 5s
+
+  db:
+    image: "${REGISTRY_DOMAIN}/${DB_VERSION}"
+    command: "start-single-node"
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - db:/cockroach/cockroach-data
+    healthcheck:
+      test: [ "CMD-SHELL","curl --fail http://localhost:8080/health || exit 1" ]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  kv:
+    restart: "always"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    image: "${REGISTRY_DOMAIN}/${REDIS_VERSION}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+  # ============ SECONDARY SERVICES ============ #
+  
