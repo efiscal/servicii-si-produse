@@ -11,6 +11,11 @@
 | Parametrii Tehnici            | CPU (AMD64/ARM64 min 6 Core-uri / 3000 MHz) \| RAM 16 GB \| Disk Storage: min. 300 GB \| Port 8443/TCP & 8443/UDP |
 | Experienta | Experienta min.: System Administrator |
 
+#### SUMELE DE CONTROL (CHECKSUMS) SHA-256
+- LINUX/AMD64 - 15c9f970edeb64224a413092658030c4928e6e3544b8882b2ec697a1fe7b1b02
+- LINUX/ARM64 - 835cb7b3af3ff11891c36bad0ad107924ad506c059b06ecfc38b6f8331e6ce0c
+
+
 #### OS-ul poate fi lansat prin mai multe modalități, cum ar fi:
 - Instalând sistemul operational Linux propriu-zis pe hardware.
 - Rulând un WSL (Windows Subsystem for Linux) cum ar fi Ubuntu sau RockyLinux în cadrul sistemului Windows (îl puteți instala de pe Online Microsoft Store/Market).
@@ -51,7 +56,7 @@
 
 5. Clonati proiectul de pe GitHub urmând comanda de mai jos sau il puteti descarca accesind acelasi link prin Browser:
     ```sh
-    git clone --depth 1 -b v1.0 https://github.com/efiscal/servicii-si-produse.git ecc-sp
+    git clone --depth 1 -b v1.0 https://github.com/efiscal/sp.git ecc-sp
     ```
 
 6. Accesați folderul care a fost clonat de pe GitHub:

@@ -10,4 +10,9 @@ else
     exit 1
 fi
 
-docker run -it --rm ${REGISTRY_DOMAIN}/${CORE_VERSION} cat /ecc/ecc.sha256
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+echo "LINUX/AMD64:"
+docker run -it --rm --platform linux/amd64 ${REGISTRY_DOMAIN}/${CORE_VERSION} cat /ecc/ecc.sha256
+echo "LINUX/ARM64:"
+docker run -it --rm --platform linux/arm64 ${REGISTRY_DOMAIN}/${CORE_VERSION} cat /ecc/ecc.sha256
