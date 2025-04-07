@@ -10,6 +10,12 @@ else
     exit 1
 fi
 
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes &>/dev/null
+if [ $? -ne 0 ]; then
+    echo "Failed to run multiarch/qemu-user-static"
+    exit 1
+fi
+
 WORKING_DIR=$(pwd)
 
 # Get current user and groupe
@@ -19,12 +25,33 @@ GROUP_ID=$(id -g)
 CURRENT_DATE=$(date +"%Y%m%d")
 
 # Set archive file name with current date
-ARCHIVE_FILE="ecc_$CURRENT_DATE.tar.gz"
+ARCHIVE_AMD64_FILE="ecc_$CURRENT_DATE.amd64.tar.gz"
+ARCHIVE_ARM64_FILE="ecc_$CURRENT_DATE.arm64.tar.gz"
 
-docker run -it --rm -v "${WORKING_DIR}:/archival" --user "${USER_ID}:${GROUP_ID}" ${REGISTRY_DOMAIN}/${CORE_VERSION} tar czf /archival/$ARCHIVE_FILE /ecc
+# AMD64
+docker run -it --rm --platform linux/amd64 -v "${WORKING_DIR}:/archival" --user "${USER_ID}:${GROUP_ID}" ${REGISTRY_DOMAIN}/${CORE_VERSION} tar czf /archival/$ARCHIVE_AMD64_FILE /ecc
 if [ $? -ne 0 ]; then
     echo "failed to create archive file"
     exit 1
 fi
-zip -r $WORKING_DIR/$ARCHIVE_FILE.zip $ARCHIVE_FILE
-echo "archived successfully"
+
+zip -r $WORKING_DIR/$ARCHIVE_AMD64_FILE.zip $ARCHIVE_AMD64_FILE
+if [ $? -ne 0 ]; then
+    echo "Failed to create zip archive: $WORKING_DIR/$ARCHIVE_AMD64_FILE.zip"
+    exit 1
+fi
+echo "archived amd64 successfully"
+
+# ARM64
+docker run -it --rm --platform linux/arm64 -v "${WORKING_DIR}:/archival" --user "${USER_ID}:${GROUP_ID}" ${REGISTRY_DOMAIN}/${CORE_VERSION} tar czf /archival/$ARCHIVE_ARM64_FILE /ecc
+if [ $? -ne 0 ]; then
+    echo "failed to create archive file"
+    exit 1
+fi
+
+zip -r $WORKING_DIR/$ARCHIVE_ARM64_FILE.zip $ARCHIVE_ARM64_FILE
+if [ $? -ne 0 ]; then
+    echo "Failed to create zip archive: $WORKING_DIR/$ARCHIVE_ARM64_FILE.zip"
+    exit 1
+fi
+echo "archived arm64 successfully"
