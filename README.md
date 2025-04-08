@@ -95,7 +95,6 @@
       ```sh
       ./archive.sh
       ```
-8. Dupa lansarea sistemului pentru prima data folosind comanda ./bin/start.sh, este nevoie de instalat licenta care v-a fost emisa de catre "Fiscal Partner", pentru aceasta este nevoie s-o aveti pe disk-ul local pentru ca mai apoi s-o incarcati prin Browser
-  9.1 Pentru incarcarea licentei este nevoie sa accesati prin Browser acest link: https://localhost:8443
+8. Dupa lansarea sistemului pentru prima data folosind comanda ./bin/start.sh, este nevoie de instalat licenta care v-a fost emisa de catre "Fiscal Partner", pentru aceasta este nevoie s-o aveti pe disk-ul local pentru ca mai apoi s-o incarcati prin Browser. Pentru incarcarea licentei este nevoie sa accesati prin Browser acest link: https://localhost:8443
 
 9. Pentru mai multe detalii, va rugam sa cititi manualul oficial de instalare care v-a transmis Fiscal Partner!
