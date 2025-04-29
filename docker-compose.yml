@@ -175,7 +175,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    image: "${REGISTRY_DOMAIN}/${REDIS_VERSION}"
+    image: "${REGISTRY_DOMAIN}/${KV_VERSION}"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
