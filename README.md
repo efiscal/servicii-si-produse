@@ -56,7 +56,7 @@
 
 5. Clonati proiectul de pe GitHub urmând comanda de mai jos sau il puteti descarca accesind acelasi link prin Browser:
     ```sh
-    git clone --depth 1 -b v1.0 https://github.com/efiscal/sp.git ecc-sp
+    git clone --depth 1 -b v1.0 https://github.com/efiscal/servicii-si-produse.git ecc-sp
     ```
 
 6. Accesați folderul care a fost clonat de pe GitHub:
@@ -74,6 +74,11 @@
     - Pentru oprirea sistemului ECC fără eliminarea resurselor:
       ```sh
       ./bin/stop.sh
+      ```
+
+    - Pentru restartarea sistemului ECC fără eliminarea resurselor:
+      ```sh
+      ./bin/restart.sh
       ```
 
     - Pentru distrugerea completă a resurselor sistemului ECC:
@@ -95,6 +100,7 @@
       ```sh
       ./archive.sh
       ```
-8. Dupa lansarea sistemului pentru prima data folosind comanda ./bin/start.sh, este nevoie de instalat licenta care v-a fost emisa de catre "Fiscal Partner", pentru aceasta este nevoie s-o aveti pe disk-ul local pentru ca mai apoi s-o incarcati prin Browser. Pentru incarcarea licentei este nevoie sa accesati prin Browser acest link: https://localhost:8443
+8. Dupa lansarea sistemului pentru prima data folosind comanda ./bin/start.sh, este nevoie de instalat licenta care v-a fost emisa de catre "Fiscal Partner", pentru aceasta este nevoie s-o aveti pe disk-ul local pentru ca mai apoi s-o incarcati prin Browser
+  9.1 Pentru incarcarea licentei este nevoie sa accesati prin Browser acest link: https://localhost:8443
 
 9. Pentru mai multe detalii, va rugam sa cititi manualul oficial de instalare care v-a transmis Fiscal Partner!
