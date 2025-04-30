@@ -1,10 +1,11 @@
 #!/bin/bash
 
 CURRENT_SCRIPT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-cd $CURRENT_SCRIPT_PATH/..
+DOCKER_ENV_PATH=$CURRENT_SCRIPT_PATH/../.env
+
 # Load environment variables from .env file
-if [ -f .env ]; then
-    export $(cat .env | xargs)
+if [ -f $DOCKER_ENV_PATH ]; then
+    export $(cat $DOCKER_ENV_PATH | xargs)
 else
     echo ".env file not found!"
     exit 1
