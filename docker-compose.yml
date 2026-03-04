@@ -1,4 +1,4 @@
-name: "sp-v1.0"
+name: "ecc-sp"
 volumes:
   db:
   app:
@@ -85,32 +85,6 @@ services:
       - docker/env/core.env
       - docker/env/db.env
       - docker/env/kv.env
-
-  core-service-ui:
-    image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"
-    command: ["ecc", "service:ui"]
-    restart: "always"
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
-    depends_on:
-      kv:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-      core-service-http:
-        condition: service_healthy
-    volumes:
-      - "/etc/ssl:/etc/ssl:ro"
-      - "/etc/pki:/etc/pki:ro"
-      - "/usr/share/zoneinfo:/usr/share/zoneinfo:ro"
-      - "app:/ecc/data"
-    env_file:
-      - docker/env/core.env
-      - docker/env/db.env
-      - docker/env/kv.env
-      - docker/env/ui.env
  
   core-prepare:
     image: "${REGISTRY_DOMAIN}/${CORE_VERSION}"

@@ -1,7 +1,7 @@
-# MANUAL DE INSTALARE A SISTEMULUI ECC S/P v1.0
+# MANUAL DE INSTALARE A SISTEMULUI ECC S/P v1.1
 
 
-### VERSIUNEA v1.0 ESTE LA MOMENTUL DE FATA SPRE CERTIFICARE
+### VERSIUNEA v1.1 ESTE LA MOMENTUL DE FATA SPRE CERTIFICARE
 
 | Cerințe | Descriere |
 |-------------------|-----------------------|
@@ -56,7 +56,7 @@
 
 5. Clonati proiectul de pe GitHub urmând comanda de mai jos sau il puteti descarca accesind acelasi link prin Browser:
     ```sh
-    git clone --depth 1 -b v1.0 https://github.com/efiscal/servicii-si-produse.git ecc-sp
+    git clone --depth 1 -b v1.1 https://github.com/efiscal/servicii-si-produse.git ecc-sp
     ```
 
 6. Accesați folderul care a fost clonat de pe GitHub:
