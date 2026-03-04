@@ -1,106 +1,118 @@
 # MANUAL DE INSTALARE A SISTEMULUI ECC S/P v1.1
 
+---
 
-### VERSIUNEA v1.1 ESTE LA MOMENTUL DE FATA SPRE CERTIFICARE
+## Cerințe de Sistem
 
-| Cerințe | Descriere |
-|-------------------|-----------------------|
-| Sistem de Operare Linux       | RockyLinux min. 9 / RHEL min. 9 / CentOS min. 9 / Ubuntu min 22.04  sau alt tip/versiune ce suporta versiunea minimă Docker|
-| Docker Engine                 | Versiunea minimă este: 27.5.1  |
-| Pachete necesare              | zip, git |
-| Parametrii Tehnici            | CPU (AMD64/ARM64 min 6 Core-uri / 3000 MHz) \| RAM 16 GB \| Disk Storage: min. 300 GB \| Port 8443/TCP & 8443/UDP |
-| Experienta | Experienta min.: System Administrator |
+| Cerinta | Descriere |
+| --- | --- |
+| Sistem de Operare | RockyLinux min. 9 / RHEL min. 9 / CentOS min. 9 / Ubuntu min. 22.04 sau alt tip/versiune ce suporta versiunea minima Docker |
+| Docker Engine | Versiunea minima: **27.5.1** |
+| Pachete necesare | `zip`, `git` |
+| Parametrii Tehnici | CPU (AMD64/ARM64 min. 6 Core-uri / 3000 MHz), RAM 16 GB, Disk Storage: min. 300 GB, Port 8443/TCP & 8443/UDP |
+| Experienta | Minima: System Administrator |
 
-#### SUMELE DE CONTROL (CHECKSUMS) SHA-256
-- LINUX/AMD64 - 97d0983ea323bef76935e43b1659e605ec22133945844dba6c2c2f18a6cc0b4e
-- LINUX/ARM64 - 5a2525fc6ddb5a3ec1d3dfee298b534099b87b1eb0c298203d17cf3473f3be52
+---
 
+## Sumele de Control (Checksums) SHA-256
 
-#### OS-ul poate fi lansat prin mai multe modalități, cum ar fi:
-- Instalând sistemul operational Linux propriu-zis pe hardware.
-- Rulând un WSL (Windows Subsystem for Linux) cum ar fi Ubuntu sau RockyLinux în cadrul sistemului Windows (îl puteți instala de pe Online Microsoft Store/Market).
+| Arhitectură  | SHA-256                                                            |
+| ------------ | ------------------------------------------------------------------ |
+| LINUX/AMD64  | `46572fb971d351c262b0c6ddadbc9c6a57706f8b3c018a4c829353950cc04a71` |
+| LINUX/ARM64  | `8abdca6d9428353dd8d25801cf4ff3cc0fe88519dc8fa680d14aee9350d9f74d` |
+
+---
+
+## Pregătirea Sistemului de Operare
+
+OS-ul poate fi lansat prin mai multe modalități:
+
+- Instalând sistemul operațional Linux propriu-zis pe hardware.
+- Rulând un **WSL** (Windows Subsystem for Linux) cum ar fi Ubuntu sau RockyLinux în cadrul sistemului Windows (îl puteți instala de pe Microsoft Store).
 - Virtualizând sistemul Linux în cadrul unui hypervizor.
 
+---
 
-#### Urmatii pasii de instalare si lansare a ECC-ului:
-1. Instalați "Docker Engine" de pe site-ul oficial Docker urmărind link-ul de mai jos (Versiunea minimă este: 27.5.1):
-    [Instalare Docker Engine](https://docs.docker.com/engine/install/)
+## Pașii de Instalare și Lansare
 
-2. După instalare, este recomandat să activați AutoStart-ul și să faceți un reboot la OS pentru a fi aplicate regulile Firewall (iptables) corect.
-    - Activarea autostart-ului
-        ```sh
-        systemctl enable docker --now
-        ```
+### 1. Instalare Docker Engine
 
-3. După reboot, asigurați-vă că serviciul Docker funcționează corect:
-    ```sh
-    systemctl status docker
-    ```
+Instalați Docker Engine de pe site-ul oficial (versiunea minimă: **27.5.1**):
 
-4. Instalați instrumentele necesare:
+> [Instalare Docker Engine](https://docs.docker.com/engine/install/)
 
-    RockyLinux / RHEL / AlmaLinux / CentOS / Fedora:
-    ```sh
-    dnf install git zip -y
-    ```
-    sau
-    ```sh
-    yum install git zip -y
-    ```
+### 2. Activare AutoStart + Reboot
 
-    Ubuntu:
-    ```sh
-    apt update && apt install git zip -y
-    ```
+După instalare, este recomandat să activați AutoStart-ul și să faceți un reboot la OS pentru a fi aplicate regulile Firewall (iptables) corect.
 
+```sh
+systemctl enable docker --now
+```
 
-5. Clonati proiectul de pe GitHub urmând comanda de mai jos sau il puteti descarca accesind acelasi link prin Browser:
-    ```sh
-    git clone --depth 1 -b v1.1 https://github.com/efiscal/servicii-si-produse.git ecc-sp
-    ```
+### 3. Verificare Docker
 
-6. Accesați folderul care a fost clonat de pe GitHub:
-    ```sh
-    cd ecc-sp
-    ```
+După reboot, asigurați-vă că serviciul Docker funcționează corect:
 
-7. Aflându-vă în cadrul folderului clonat, puteți executa următoarele comenzi:
+```sh
+systemctl status docker
+```
 
-    - Pentru crearea și lansarea sistemului ECC în regim "background" (în cazul în care acesta a fost deja creat anterior, acesta va verifica):
-      ```sh
-      ./bin/start.sh
-      ```
+### 4. Instalare instrumente necesare
 
-    - Pentru oprirea sistemului ECC fără eliminarea resurselor:
-      ```sh
-      ./bin/stop.sh
-      ```
+**RockyLinux / RHEL / AlmaLinux / CentOS / Fedora:**
 
-    - Pentru restartarea sistemului ECC fără eliminarea resurselor:
-      ```sh
-      ./bin/restart.sh
-      ```
+```sh
+dnf install git zip -y
+```
 
-    - Pentru distrugerea completă a resurselor sistemului ECC:
-      ```sh
-      ./bin/destroy.sh
-      ```
+sau
 
-    - Pentru distrugerea completă sistemului ECC si a volumelor cu informatii:
-      ```sh
-      ./bin/destroy-data.sh
-      ```
+```sh
+yum install git zip -y
+```
 
-    - Pentru generarea sumei de control (Checksum) a aplicației ECC folosind algoritmul SHA-256:
-      ```sh
-      ./checksum.sh
-      ```
+**Ubuntu:**
 
-    - Pentru crearea unei arhive a aplicației ECC:
-      ```sh
-      ./archive.sh
-      ```
-8. Dupa lansarea sistemului pentru prima data folosind comanda ./bin/start.sh, este nevoie de instalat licenta care v-a fost emisa de catre "Fiscal Partner", pentru aceasta este nevoie s-o aveti pe disk-ul local pentru ca mai apoi s-o incarcati prin Browser
-  9.1 Pentru incarcarea licentei este nevoie sa accesati prin Browser acest link: https://localhost:8443
+```sh
+apt update && apt install git zip -y
+```
 
-9. Pentru mai multe detalii, va rugam sa cititi manualul oficial de instalare care v-a transmis Fiscal Partner!
+### 5. Clonare proiect
+
+Clonați proiectul de pe GitHub sau îl puteți descărca accesând același link prin Browser:
+
+```sh
+git clone --depth 1 -b v1.1 https://github.com/efiscal/servicii-si-produse.git ecc-sp
+```
+
+### 6. Accesare folder
+
+```sh
+cd ecc-sp
+```
+
+### 7. Comenzi disponibile
+
+Aflându-vă în cadrul folderului clonat, puteți executa următoarele comenzi:
+
+| Acțiune                                        | Comandă                 |
+| ---------------------------------------------- | ----------------------- |
+| Creare și lansare ECC (background)             | `./bin/start.sh`        |
+| Oprire ECC (fără eliminarea resurselor)        | `./bin/stop.sh`         |
+| Restartare ECC (fără eliminarea resurselor)    | `./bin/restart.sh`      |
+| Distrugere completă a resurselor ECC           | `./bin/destroy.sh`      |
+| Distrugere completă ECC + volume cu informații | `./bin/destroy-data.sh` |
+| Generare checksum SHA-256                      | `./checksum.sh`         |
+| Creare arhivă ECC                              | `./archive.sh`          |
+
+### 8. Instalare licență
+
+După lansarea sistemului pentru prima dată folosind `./bin/start.sh`, este nevoie de instalat licența care v-a fost emisă de către **Fiscal Partner**. Aveți licența pe disk-ul local, apoi încărcați-o prin Browser:
+
+```text
+https://localhost:8443
+```
+
+### 9. Informații suplimentare
+
+Pentru mai multe detalii, vă rugăm să citiți **manualul oficial de instalare** care v-a fost transmis de Fiscal Partner.
