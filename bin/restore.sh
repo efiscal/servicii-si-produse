@@ -6,39 +6,87 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 # The stack is stopped first so CockroachDB's data directory is replaced in a
 # consistent state, then started again once the archives are extracted.
 #
-# Usage: bin/restore.sh [TIMESTAMP]
+# Usage: bin/restore.sh [-d|--dir BACKUP_DIR] [TIMESTAMP]
+#   -d, --dir   Directory to restore backups from. Defaults to ./backups, or the
+#               BACKUP_DIR env var. May be absolute or outside the project.
 #   TIMESTAMP   The backup timestamp to restore, e.g. 20260619-143000.
 #               If omitted, the most recent backup is used.
 
 PROJECT="ecc-sp"
 VOLUMES=("app" "db")
 
-BACKUP_DIR="backups"
+# Where to read backups from; mirror backup.sh (env var + -d/--dir override).
+BACKUP_DIR="${BACKUP_DIR:-backups}"
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [-d|--dir BACKUP_DIR] [TIMESTAMP]
+
+Restore the docker volumes (${VOLUMES[*]}) from tar.gz archives. The stack is
+stopped, the volumes are replaced, then the stack is restarted. Archives are
+validated before any volume is touched.
+
+Arguments:
+  TIMESTAMP       Backup to restore, e.g. 20260619-143000. If omitted, you are
+                  shown a menu of available backups (newest first).
+
+Options:
+  -d, --dir DIR   Directory to restore backups from (default: ./backups, or the
+                  BACKUP_DIR env var). May be absolute or outside the project.
+  -h, --help      Show this help and exit.
+EOF
+}
+
+TIMESTAMP=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -d | --dir)
+            if [ -z "${2:-}" ]; then
+                echo "ERROR: $1 requires a directory argument."
+                usage
+                exit 1
+            fi
+            BACKUP_DIR="$2"
+            shift 2
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo "ERROR: unknown argument: $1"
+            usage
+            exit 1
+            ;;
+        *)
+            TIMESTAMP="$1"
+            shift
+            ;;
+    esac
+done
 
 if [ ! -d "$BACKUP_DIR" ]; then
     echo "ERROR: backup directory '${BACKUP_DIR}' not found."
     exit 1
 fi
 
-TIMESTAMP="${1:-}"
-
 # If no timestamp was given, present a menu of available backups to choose from.
 if [ -z "$TIMESTAMP" ]; then
-    # Collect available timestamps (one per app- archive), newest first.
+    # Collect available timestamps (one per backup subfolder), newest first.
     mapfile -t TIMESTAMPS < <(ls "$BACKUP_DIR" 2>/dev/null \
-        | sed -n 's/^app-\(.*\)\.tar\.gz$/\1/p' \
+        | sed -n 's/^\([0-9]\{8\}-[0-9]\{6\}\)$/\1/p' \
         | sort -r)
 
     if [ "${#TIMESTAMPS[@]}" -eq 0 ]; then
         echo "ERROR: no backups found in '${BACKUP_DIR}'."
-        echo "Expected archives like app-YYYYMMDD-HHMMSS.tar.gz"
+        echo "Expected subfolders like YYYYMMDD-HHMMSS/ containing app-*.tar.gz"
         exit 1
     fi
 
     echo "Available backups:"
     for i in "${!TIMESTAMPS[@]}"; do
         ts="${TIMESTAMPS[$i]}"
-        size=$(du -ch "${BACKUP_DIR}/app-${ts}.tar.gz" "${BACKUP_DIR}/db-${ts}.tar.gz" 2>/dev/null \
+        size=$(du -ch "${BACKUP_DIR}/${ts}/app-${ts}.tar.gz" "${BACKUP_DIR}/${ts}/db-${ts}.tar.gz" 2>/dev/null \
             | awk '/total/{print $1}')
         printf "  %2d) %s  (%s)\n" "$((i + 1))" "$ts" "${size:-?}"
     done
@@ -53,13 +101,26 @@ if [ -z "$TIMESTAMP" ]; then
     echo "Selected backup: ${TIMESTAMP}"
 fi
 
+# Each run's archives live together in their own timestamped subfolder, e.g.
+# backups/20260620-081714/{app,db}-20260620-081714.tar.gz
+RUN_DIR="${BACKUP_DIR}/${TIMESTAMP}"
+
+if [ ! -d "$RUN_DIR" ]; then
+    echo "ERROR: backup subfolder not found: ${RUN_DIR}"
+    exit 1
+fi
+
+# Resolve to an absolute path so docker -v works whether BACKUP_DIR was given
+# as a relative or an absolute path.
+RUN_DIR_ABS=$(cd "$RUN_DIR" && pwd)
+
 # Verify every archive we are about to restore exists and is intact BEFORE we
 # touch anything. A corrupt archive must be caught here, while the live volumes
 # are still untouched -- otherwise we would wipe the volume and then fail to
 # extract, losing the data entirely.
 echo "Validating backup archives..."
 for vol in "${VOLUMES[@]}"; do
-    archive="${BACKUP_DIR}/${vol}-${TIMESTAMP}.tar.gz"
+    archive="${RUN_DIR}/${vol}-${TIMESTAMP}.tar.gz"
     if [ ! -f "$archive" ]; then
         echo "ERROR: archive not found: ${archive}"
         exit 1
@@ -69,7 +130,7 @@ for vol in "${VOLUMES[@]}"; do
     # readable to the end. Run both inside the same alpine image we restore with
     # so the check uses the exact tooling that will perform the extraction.
     if ! docker run --rm \
-        -v "$(pwd)/${BACKUP_DIR}:/backup:ro" \
+        -v "${RUN_DIR_ABS}:/backup:ro" \
         alpine \
         sh -c 'gzip -t "/backup/'"${vol}-${TIMESTAMP}.tar.gz"'" && tar tzf "/backup/'"${vol}-${TIMESTAMP}.tar.gz"'" >/dev/null'; then
         echo "ERROR: archive is corrupt or unreadable: ${archive}"
@@ -81,7 +142,7 @@ done
 
 echo "About to restore the following archives into volumes (existing data will be REPLACED):"
 for vol in "${VOLUMES[@]}"; do
-    echo "  ${BACKUP_DIR}/${vol}-${TIMESTAMP}.tar.gz -> ${PROJECT}_${vol}"
+    echo "  ${RUN_DIR}/${vol}-${TIMESTAMP}.tar.gz -> ${PROJECT}_${vol}"
 done
 read -r -p "Continue? [y/N] " confirm
 case "$confirm" in
@@ -117,11 +178,11 @@ echo "All containers stopped."
 for vol in "${VOLUMES[@]}"; do
     full_name="${PROJECT}_${vol}"
     archive="${vol}-${TIMESTAMP}.tar.gz"
-    echo "Restoring volume ${full_name} <- ${BACKUP_DIR}/${archive}"
+    echo "Restoring volume ${full_name} <- ${RUN_DIR}/${archive}"
     # Wipe the current contents of the volume, then extract the archive into it.
     docker run --rm \
         -v "${full_name}:/data" \
-        -v "$(pwd)/${BACKUP_DIR}:/backup:ro" \
+        -v "${RUN_DIR_ABS}:/backup:ro" \
         alpine \
         sh -c 'rm -rf /data/* /data/..?* /data/.[!.]* 2>/dev/null; tar xzf "/backup/'"${archive}"'" -C /data'
 done
