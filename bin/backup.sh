@@ -6,7 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 # The stack is stopped first so CockroachDB's data directory is in a consistent
 # state, then started again once the archives are written.
 
-PROJECT="ecc-sp"
+# PROJECT is resolved from docker-compose.yml in _common.sh.
 VOLUMES=("app" "db")
 
 # Where to write backups. Defaults to ./backups (relative to the project root),

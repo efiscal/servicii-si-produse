@@ -12,7 +12,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 #   TIMESTAMP   The backup timestamp to restore, e.g. 20260619-143000.
 #               If omitted, the most recent backup is used.
 
-PROJECT="ecc-sp"
+# PROJECT is resolved from docker-compose.yml in _common.sh.
 VOLUMES=("app" "db")
 
 # Where to read backups from; mirror backup.sh (env var + -d/--dir override).
