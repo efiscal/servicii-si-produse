@@ -102,10 +102,13 @@ done
 # Likely size = the most recent existing backup, if any. Real data is usually
 # far smaller than the uncompressed figure once gzip'd, so this is the more
 # realistic expectation when previous backups exist.
+# The trailing `|| true` is required: with `set -euo pipefail` a grep that
+# matches nothing (no previous backup) returns 1, which would otherwise abort
+# the whole script here, silently, before the stack is even touched.
 last_dir=$(ls -1d "${BACKUP_DIR}"/*/ 2>/dev/null \
     | grep -E "/[0-9]{8}-[0-9]{6}/$" \
     | grep -v "/${TIMESTAMP}/$" \
-    | sort | tail -1)
+    | sort | tail -1) || true
 likely_bytes=0
 if [ -n "$last_dir" ]; then
     last_kb=$(du -sk "$last_dir" 2>/dev/null | awk '{print $1}')
