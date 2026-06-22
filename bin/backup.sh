@@ -142,6 +142,30 @@ else
 fi
 echo
 
+# --- Capture the stack configuration alongside the volume data --------------
+# So a restore knows exactly which compose file, env files and image versions
+# produced this backup. Done BEFORE stopping the stack so the container JSON
+# reflects the live, running state. These are tiny text files; their size is
+# negligible next to the volume archives, so they are not part of the disk
+# check above.
+CONFIG_DIR="${RUN_DIR}/config"
+mkdir -p "$CONFIG_DIR"
+echo "Capturing stack configuration -> ${CONFIG_DIR}/"
+
+# Compose file + the env files it references (root .env holds the image
+# versions; docker/env/* hold the per-service config).
+cp docker-compose.yml "$CONFIG_DIR/"
+[ -f .env ] && cp .env "$CONFIG_DIR/"
+[ -d docker ] && cp -a docker "$CONFIG_DIR/"
+
+# Which image (and thus version) each container is actually running, plus the
+# fully-resolved compose config. `|| true` so a docker hiccup here never aborts
+# the backup itself.
+docker compose ps -a --format json >"${CONFIG_DIR}/containers-${TIMESTAMP}.json" 2>/dev/null || true
+docker compose config --format json >"${CONFIG_DIR}/compose-config-${TIMESTAMP}.json" 2>/dev/null || true
+echo "  OK: docker-compose.yml, .env, docker/, container + compose JSON"
+echo
+
 # If we error out after stopping the stack (disk fills mid-write, validation
 # fails, etc.), make a best effort to bring it back up rather than leaving the
 # service down.
