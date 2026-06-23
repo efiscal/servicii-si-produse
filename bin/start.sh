@@ -14,9 +14,47 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 # How long to wait on the registry before treating it as "not responding".
 REGISTRY_TIMEOUT=15
 
+# When set, skip the whole image check/pull step and start with local images.
+SKIP_CHECK=0
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [-n|--no-check] [-h|--help]
+
+Start the stack. By default each image is checked against the registry and, if a
+newer version exists, you are offered to pull it; missing images are pulled
+automatically. A registry that is down is never fatal -- it is reported and the
+local images are used.
+
+Options:
+  -n, --no-check   Skip the image version check/pull entirely and just start the
+                   stack with whatever images are present locally.
+  -h, --help       Show this help and exit.
+EOF
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -n | --no-check)
+            SKIP_CHECK=1
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "ERROR: unknown argument: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
 # sha256 manifest digest of the image stored LOCALLY (empty if unknown).
 local_digest() {
-    local ref="$1" repo="${ref%:*}"
+    local ref="$1"
+    local repo="${ref%:*}"
     docker image inspect "$ref" --format '{{json .RepoDigests}}' 2>/dev/null \
         | jq -r --arg repo "$repo" '.[]? | select(startswith($repo + "@")) | sub(".*@"; "")' \
         | head -1
@@ -38,6 +76,12 @@ confirm_yes() {
         *) return 1 ;;
     esac
 }
+
+if [ "$SKIP_CHECK" = "1" ]; then
+    echo "Skipping image check (--no-check); starting with local images..."
+    docker compose up -d
+    exit $?
+fi
 
 # Resolve services -> images from the compose config.
 mapfile -t SVC_IMG < <(docker compose config --format json \
